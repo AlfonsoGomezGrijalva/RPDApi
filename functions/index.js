@@ -59,22 +59,22 @@ app.use(cors);
 app.use(cookieParser);
 // app.use(validateFirebaseIdToken);
 
-app.get('/users',(req,res)=>{
+app.get('/users',async (req,res)=>{
     try {
-        const userUID = "9a3tjYVnLIXEEvCiq9llSkU3cg53";
-        let rpdData = db.collection('RPD').doc(userUID);
-        let getDoc = rpdData.get()
-            .then(doc => {
-                if (!doc.exists) {
-                res.status(404);
-                } else {
-                    res.status(200).send(doc.data());
-                }
-            })
-            .catch(err => {
-                res.status(500).send(err);
+      let data = [];
+      let rdpCollection =  db.collection('RPD');
+      await rdpCollection.get()
+          .then(snapshot => {
+            snapshot.forEach(doc => {          
+              data.push({ id: doc.id, ...doc.data() });
             });
+          })
+          .catch(err => {
+            console.log('Error getting documents', err);
+          });
         
+        res.status(200).send(data);
+
       } catch (error) {
         res.status(500).send(error);
       } 
