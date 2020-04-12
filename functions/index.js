@@ -59,26 +59,59 @@ app.use(cors);
 app.use(cookieParser);
 // app.use(validateFirebaseIdToken);
 
-app.get('/users',async (req,res)=>{
+app.get('/rpd',async (req,res)=>{
     try {
       let data = [];
+      let result = [];
+      let count = 0;
       let rdpCollection =  db.collection('RPD');
       await rdpCollection.get()
           .then(snapshot => {
+            count = snapshot.size;
             snapshot.forEach(doc => {          
-              data.push({ id: doc.id, ...doc.data() });
+              data.push({id: doc.id, ...doc.data()});
             });
           })
           .catch(err => {
             console.log('Error getting documents', err);
           });
         
-        res.status(200).send(data);
+        result.push({totalCount: count, items: data});
+
+        res.status(200).send(result);
 
       } catch (error) {
         res.status(500).send(error);
       } 
   });
+
+app.post("/rpd", async (req,res)=>{
+  try{
+ 
+    const newRpd = {
+          fecha: req.body.fecha,
+          situacion: req.body.situacion,
+          pensamiento: req.body.pensamiento,
+          emocion: req.body.emocion,
+          respuesta: req.body.respuesta,
+          resultado: req.body.resultado,
+          user: '9a3tjYVnLIXEEvCiq9llSkU3cg53'
+    }
+
+    if(!!req.body.id)
+      await db.collection('RPD').doc(req.body.id).set(newRpd, {merge: true});
+    else
+      await db.collection('RPD').doc().set(newRpd);
+
+    res.sendStatus(201);
+  }
+  catch(error) 
+  {
+      console.log(error);
+      res.status(500).send(error);
+  }
+  });
+  
 
   // This HTTPS endpoint can only be accessed by your Firebase Users.
 // Requests need to be authorized by providing an `Authorization` HTTP header
