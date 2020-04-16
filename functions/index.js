@@ -115,6 +115,14 @@ app.post("/rpd", async (req,res)=>{
   }
   });
   
+  app.delete('/rpd', (req, res)=>{
+    try {
+      db.collection('RPD').doc(req.body.id).delete();
+      res.sendStatus(200);
+    } catch (error) {
+      res.status(500).send(error);
+    }    
+  });
 
   // This HTTPS endpoint can only be accessed by your Firebase Users.
 // Requests need to be authorized by providing an `Authorization` HTTP header
