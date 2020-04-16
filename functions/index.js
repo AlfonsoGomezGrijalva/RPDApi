@@ -100,9 +100,12 @@ app.post("/rpd", async (req,res)=>{
 
     if(!!req.body.id)
       await db.collection('RPD').doc(req.body.id).set(newRpd, {merge: true});
-    else
-      await db.collection('RPD').doc().set(newRpd);
+    else{
+      let date = new Date();
+      let docID = date.getFullYear() + ("0" + (date.getMonth() + 1)).slice(-2) + ("0" + date.getDate()).slice(-2) + ("0" + date.getHours() + 1 ).slice(-2) + ("0" + date.getMinutes()).slice(-2) + ("0" + date.getSeconds()).slice(-2)
 
+      await db.collection('RPD').doc(docID).set(newRpd);
+    }
     res.sendStatus(201);
   }
   catch(error) 
