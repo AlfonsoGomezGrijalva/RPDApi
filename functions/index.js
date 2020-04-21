@@ -43,6 +43,7 @@ const validateFirebaseIdToken = async (req, res, next) => {
     }
   
     try {
+      console.log("token: " + idToken);
       const decodedIdToken = await admin.auth().verifyIdToken(idToken, true);
       console.log('ID Token correctly decoded', decodedIdToken);
       req.user = decodedIdToken;
@@ -57,7 +58,7 @@ const validateFirebaseIdToken = async (req, res, next) => {
   
 app.use(cors);
 app.use(cookieParser);
-// app.use(validateFirebaseIdToken);
+app.use(validateFirebaseIdToken);
 
 app.get('/rpd',async (req,res)=>{
     try {
@@ -117,14 +118,63 @@ app.post("/rpd", async (req,res)=>{
   
   app.delete('/rpd', (req, res)=>{
     try {
-      db.collection('RPD').doc(req.body.id).delete();
-      res.sendStatus(200);
+      if(!!req.body.id)
+      {
+        db.collection('RPD').doc(req.body.id).delete();
+        res.sendStatus(200);
+      }
+      else
+        res.sendStatus(400);
     } catch (error) {
       res.status(500).send(error);
     }    
   });
 
-  // This HTTPS endpoint can only be accessed by your Firebase Users.
+  app.post('/users', (req, res) => {
+    const newUserAuth = {
+      email: req.body.email.toLowerCase(),
+      password: req.body.password
+    };
+  
+    const addNewUser = {
+      email: req.body.email.toLowerCase(),
+      role: req.body.role,
+      name: req.body.name
+    };
+  
+    admin.auth().createUser(newUserAuth)
+      .then(userRecord => {
+        db.collection('users').doc(userRecord.uid).set(addNewUser);
+        res.sendStatus(201);
+      })
+      .catch(error => {
+        console.log(error);
+        res.status(500).send(error);
+      });
+  });
+
+  app.delete('/users',  (req,res)=>{
+    const userUID = req.body.id;
+  
+    admin.auth().deleteUser(userUID)
+      .then(async userRecord => {
+        await db.collection('users').doc(userUID).delete();
+        res.sendStatus(200);
+      })
+      .catch(error => {
+        console.log(error);
+        res.status(500).send(error);
+      });
+  });
+
+  app.delete('/signout', async (req, res) => {
+    const token = req.headers.authorization.split('Bearer ')[1]
+    const result = await admin.auth().verifyIdToken(token);
+    await admin.auth().revokeRefreshTokens(result.uid);
+  
+    res.status(200);
+  });
+// This HTTPS endpoint can only be accessed by your Firebase Users.
 // Requests need to be authorized by providing an `Authorization` HTTP header
 // with value `Bearer <Firebase ID Token>`.
 exports.app = functions.https.onRequest(app);
