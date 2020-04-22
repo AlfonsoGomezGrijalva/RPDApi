@@ -66,7 +66,7 @@ app.get('/rpd',async (req,res)=>{
       let result = [];
       let count = 0;
       let rdpCollection =  db.collection('RPD');
-      await rdpCollection.get()
+      await rdpCollection.where('user', '==', req.query.user).get()
           .then(snapshot => {
             count = snapshot.size;
             snapshot.forEach(doc => {          
@@ -96,7 +96,8 @@ app.post("/rpd", async (req,res)=>{
           emocion: req.body.emocion,
           respuesta: req.body.respuesta,
           resultado: req.body.resultado,
-          user: '9a3tjYVnLIXEEvCiq9llSkU3cg53'
+          id: req.body.id,
+          user: req.body.user
     }
 
     if(!!req.body.id)
@@ -104,7 +105,6 @@ app.post("/rpd", async (req,res)=>{
     else{
       let date = new Date();
       let docID = date.getFullYear() + ("0" + (date.getMonth() + 1)).slice(-2) + ("0" + date.getDate()).slice(-2) + ("0" + date.getHours() + 1 ).slice(-2) + ("0" + date.getMinutes()).slice(-2) + ("0" + date.getSeconds()).slice(-2)
-
       await db.collection('RPD').doc(docID).set(newRpd);
     }
     res.sendStatus(201);
