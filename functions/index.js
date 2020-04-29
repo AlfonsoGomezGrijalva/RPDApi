@@ -96,7 +96,6 @@ app.post("/rpd", async (req,res)=>{
           emocion: req.body.emocion,
           respuesta: req.body.respuesta,
           resultado: req.body.resultado,
-          id: req.body.id,
           user: req.body.user
     }
 
@@ -168,11 +167,18 @@ app.post("/rpd", async (req,res)=>{
   });
 
   app.delete('/signout', async (req, res) => {
-    const token = req.headers.authorization.split('Bearer ')[1]
-    const result = await admin.auth().verifyIdToken(token);
-    await admin.auth().revokeRefreshTokens(result.uid);
-  
-    res.status(200);
+    try{
+      const token = req.headers.authorization.split('Bearer ')[1]
+      const result = await admin.auth().verifyIdToken(token);
+      await admin.auth().revokeRefreshTokens(result.uid);
+    
+      res.status(200);
+    }
+    catch(err){
+      console.log(err);
+      res.status(500);
+    }
+    
   });
 // This HTTPS endpoint can only be accessed by your Firebase Users.
 // Requests need to be authorized by providing an `Authorization` HTTP header
